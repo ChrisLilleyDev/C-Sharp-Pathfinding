@@ -58,16 +58,14 @@ public class MoveManager : MonoBehaviour {
             }
         }
     }
-    //A* starts here
+    //A* starts here    
     private List<Tile> MakePath(Tile destination) {
         PathNode[,] grid = new PathNode[destination.grid.width, destination.grid.height];
-
         for(int x = 0; x < destination.grid.width; x++) {
             for(int y = 0; y < destination.grid.height; y++) {
                 grid[x, y] = new PathNode(destination.grid.gridArray[x, y]);
-            }
+            }//2D array of nodes is initialised
         }
-
         Tile startTile = selectedUnit.tile;
         PathNode startNode = grid[startTile.xPos, startTile.yPos];
         PathNode endNode = grid[destination.xPos, destination.yPos];
@@ -75,31 +73,30 @@ public class MoveManager : MonoBehaviour {
 
         List<PathNode> openList = new List<PathNode> { startNode };
         HashSet<PathNode> closedList = new HashSet<PathNode>();
-
-        startNode.g = 0;
-        startNode.h = Distance(startNode, endNode);
-        startNode.f = startNode.h;
-
+        //HashSet is used to save time searching
+        startNode.g = 0; //cost to get to the node from the start node
+        startNode.h = Distance(startNode, endNode); //estimated distance from the end node
+        startNode.f = startNode.h; //cost of node f = g + h
+        //with lists and start node values initialised the algorithm can begin
         while(openList.Count > 0) {
             PathNode currentNode = openList[0];
             for(int i = 1; i < openList.Count; i++) {
                 if(openList[i].f < currentNode.f || openList[i].f == currentNode.f && openList[i].h < currentNode.h) {
                     currentNode = openList[i];
-                }
+                }//searching for a cheaper node, or one of the same value that is closer to the end
             }
-
             if(currentNode == endNode) {
                 return Path(endNode);
             }
-
             openList.Remove(currentNode);
             closedList.Add(currentNode);
 
             foreach(PathNode neighbour in Neighbours(grid, currentNode)) {
                 if(!neighbour.walkable || closedList.Contains(neighbour)) continue;
-
                 int testG = currentNode.g + Distance(currentNode, neighbour);
                 if(testG < neighbour.g && testG <= 10 * selectedUnit.moveRange) {
+                //checks if new g is better than neighbours current g
+                //and that current path is within the units movement range
                     neighbour.parent = currentNode;
                     neighbour.g = testG;
                     neighbour.h = Distance(neighbour, endNode);
@@ -108,7 +105,6 @@ public class MoveManager : MonoBehaviour {
                 }
             }
         }
-
         return null;
     }
     //neighbour checking method
